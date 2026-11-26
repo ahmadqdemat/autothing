@@ -1,0 +1,27 @@
+name: JDECo Electricity Bills
+version: "1.1.0"
+slug: jdeco_bills
+description: Unpaid Jerusalem District Electricity (JDECo) bills and the last meter reading as sensors
+url: https://github.com/ahmadqdemat/autothing
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+homeassistant_api: true
+map:
+  - share:rw
+options:
+  refresh_token: ""
+  service_numbers: []
+  account_id: ""
+  check_interval_minutes: 720
+  notify_service: ""
+schema:
+  refresh_token: password
+  service_numbers:
+    - str
+  account_id: str?
+  check_interval_minutes: int(5,43200)
+  notify_service: str?

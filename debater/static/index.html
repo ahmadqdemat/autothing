@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Debater</title>
+    <link rel="stylesheet" href="static/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside id="sidebar" class="sidebar">
+        <button id="newChatBtn" class="new-chat" type="button">New chat</button>
+        <p class="side-label">History</p>
+        <nav id="history" class="history" aria-label="Chat history"></nav>
+      </aside>
+
+      <div class="main">
+        <header class="top">
+          <button id="menuBtn" class="icon-btn" type="button" aria-label="Open history">
+            Menu
+          </button>
+          <div class="brand">
+            <strong>Debater</strong>
+            <span id="phaseChip">Interview</span>
+          </div>
+          <button id="watchBtn" class="ghost" type="button">Agents</button>
+        </header>
+
+        <div id="setup" class="banner hidden" role="status">
+          Add <code>GEMINI_API_KEY</code> to <code>.env</code> from
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer"
+            >Google AI Studio</a
+          >, then restart the server.
+        </div>
+
+        <div id="searchWarn" class="banner hidden" role="status"></div>
+
+        <div class="chat-scroll">
+          <div id="chatScroll" class="chat-pane">
+            <main id="thread" class="thread" aria-live="polite"></main>
+            <section
+              id="scoreDock"
+              class="score-dock hidden"
+              aria-label="Decision analysis"
+            ></section>
+          </div>
+        </div>
+
+        <form id="composer" class="composer" autocomplete="off">
+          <p id="liveStatus" class="live-status" aria-live="polite">Waiting for you to talk to Guide.</p>
+          <button id="startBtn" class="start hidden" type="button">
+            Start deliberation
+          </button>
+          <div class="composer-box">
+            <textarea
+              id="input"
+              rows="3"
+              placeholder="Describe the decision you are facing, the alternatives, or paste a link"
+            ></textarea>
+            <div class="composer-tools">
+              <label class="attach">
+                <input id="fileInput" type="file" accept="image/*" multiple hidden />
+                Photo
+              </label>
+              <button id="sendBtn" type="submit">Send</button>
+            </div>
+            <div id="previews" class="previews"></div>
+          </div>
+        </form>
+      </div>
+
+      <aside id="agentPanel" class="agent-panel" aria-label="Agent communication">
+        <div class="agent-head">
+          <div>
+            <p class="eyebrow">Background</p>
+            <h2>Agents</h2>
+          </div>
+          <button id="closePanelBtn" class="ghost icon-btn" type="button">Close</button>
+        </div>
+        <p id="activity" class="activity">Idle — talk to Guide. The deliberation log appears here.</p>
+        <p class="eyebrow card-label">Decision brief</p>
+        <div id="cardPanel" class="card-panel"></div>
+        <ol id="chamberLog" class="chamber-log"></ol>
+      </aside>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <script src="static/app.js"></script>
+  </body>
+</html>

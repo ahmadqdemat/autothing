@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Behavior Monitor – User Guide</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --text: #1d2330; --muted: #5d6676; --line: #e3e6ec;
+    --accent: #0b7fd6; --accent-soft: #e6f2fc; --warn: #b45309; --warn-soft: #fff4e5;
+    --ok: #15803d; --ok-soft: #e9f7ee; --code: #f1f3f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151c; --card: #1a2029; --text: #e7eaf0; --muted: #9aa3b2; --line: #2a313c;
+      --accent: #4aa8f0; --accent-soft: #17293a; --warn: #f0a24a; --warn-soft: #2e2416;
+      --ok: #4ccf7c; --ok-soft: #16291e; --code: #222a35;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  header { background: linear-gradient(135deg, #0b7fd6, #0a5ea8); color: #fff; padding: 48px 20px 40px; }
+  header .wrap { max-width: 880px; margin: 0 auto; }
+  header h1 { margin: 0 0 8px; font-size: 2.1rem; letter-spacing: -0.01em; }
+  header p { margin: 0; font-size: 1.1rem; opacity: .92; max-width: 640px; }
+  nav { position: sticky; top: 0; z-index: 2; background: var(--card); border-bottom: 1px solid var(--line); }
+  nav .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; display: flex; gap: 4px; overflow-x: auto; }
+  nav a { color: var(--muted); text-decoration: none; padding: 12px 10px; white-space: nowrap; font-size: .92rem; border-bottom: 2px solid transparent; }
+  nav a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  main { max-width: 880px; margin: 0 auto; padding: 8px 20px 64px; }
+  section { margin-top: 40px; }
+  h2 { font-size: 1.45rem; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; margin: 24px 0 8px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .card h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
+  .icon { font-size: 1.4rem; line-height: 1; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
+  .steps li { counter-increment: s; position: relative; padding: 0 0 18px 48px; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 600; }
+  .note { border-radius: 10px; padding: 12px 16px; margin: 14px 0; }
+  .note.tip { background: var(--accent-soft); }
+  .note.warn { background: var(--warn-soft); }
+  .note.ok { background: var(--ok-soft); }
+  .note strong { display: block; margin-bottom: 2px; }
+  code { background: var(--code); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
+  pre { background: var(--code); padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-size: .88rem; line-height: 1.5; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: .95rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--code); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  .phone { max-width: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .phone .t { font-weight: 600; }
+  .phone .b { color: var(--muted); font-size: .93rem; margin: 2px 0 10px; }
+  .phone .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .phone .btns span { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-size: .85rem; color: var(--accent); }
+  .heat { display: grid; grid-template-columns: 120px repeat(24, 1fr); gap: 2px; font-size: .72rem; align-items: center; }
+  .heat div.c { height: 16px; border-radius: 3px; background: var(--accent); }
+  .faq details { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+  .faq summary { cursor: pointer; font-weight: 600; }
+  .faq details[open] summary { margin-bottom: 8px; }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 24px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>🔍 Behavior Monitor</h1>
+    <p>A Home Assistant app that learns how your home is normally used, and tells you when something is out of the ordinary — like the kitchen lights left on at 2&nbsp;AM, or the AC running while everyone is out.</p>
+  </div>
+</header>
+
+<nav><div class="wrap">
+  <a href="#how">How it works</a>
+  <a href="#alerts">Alerts</a>
+  <a href="#install">Install</a>
+  <a href="#setup">Setup</a>
+  <a href="#page">Status page</a>
+  <a href="#settings">Settings</a>
+  <a href="#faq">FAQ</a>
+</div></nav>
+
+<main>
+
+<section id="how">
+  <h2>How it works</h2>
+  <p>You don't write any rules. The app watches your lights, switches, ACs, TVs and covers, and builds a picture of what's normal for each one.</p>
+  <div class="grid">
+    <div class="card"><h3><span class="icon">📚</span> 1. Learn</h3>
+      <p>Every night it reads up to 6 weeks of history and learns, for every device, how often it is on at each hour of the day — separately for when someone is home and when everyone is away. It also learns how long each device usually stays on.</p></div>
+    <div class="card"><h3><span class="icon">👀</span> 2. Watch</h3>
+      <p>Every 5 minutes it compares what is on right now with what it learned.</p></div>
+    <div class="card"><h3><span class="icon">📱</span> 3. Tell you</h3>
+      <p>When something is unusual, you get one phone notification that says what and why, with buttons to fix it right away.</p></div>
+    <div class="card"><h3><span class="icon">🎓</span> 4. Learn from you</h3>
+      <p>Tap <b>This is normal</b> and that alert won't come back for that device at that time of day.</p></div>
+  </div>
+  <div class="note ok"><strong>Always-on devices are left alone</strong>Anything that is on most of the time (like a fridge) is never flagged.</div>
+</section>
+
+<section id="alerts">
+  <h2>The three kinds of alert</h2>
+  <table>
+    <tr><th>Alert</th><th>When it is sent</th><th>Example</th></tr>
+    <tr><td>🌙 <b>Unusual hour</b></td><td>A device has been on for 20+ minutes at an hour when it is on less than 5% of the time.</td><td>Kitchen lights on at 02:00, normally off after 23:00.</td></tr>
+    <tr><td>⏱️ <b>On too long</b></td><td>A device has been on much longer than it usually is (1.5× its usual longest run, and at least 1 hour).</td><td>Floodlight on for 18 hours; it's usually off within 12.</td></tr>
+    <tr><td>🚪 <b>On while away</b></td><td>Everyone has been away for 20+ minutes and the device is normally off when nobody is home.</td><td>Living room AC still running after everyone left.</td></tr>
+  </table>
+
+  <h3>What a notification looks like</h3>
+  <div class="phone">
+    <div class="t">🔍 Unusual: Kitchen 1</div>
+    <div class="b">Kitchen 1: on for 3h 10m; it's on only 2% of the time at this hour</div>
+    <div class="btns"><span>Turn off</span><span>Ignore</span><span>This is normal</span></div>
+  </div>
+  <p class="muted" style="margin-top:10px">If several devices are unusual at once (for example everyone just left), they arrive together in one notification with a <b>Turn all off</b> button.</p>
+
+  <h3>What the buttons do</h3>
+  <table>
+    <tr><th>Button</th><th>What happens</th></tr>
+    <tr><td><b>Turn off</b></td><td>Turns the device off (covers are closed). Devices you list under <code>no_action_entities</code>, such as a gate, never get this button.</td></tr>
+    <tr><td><b>Ignore</b></td><td>No more alerts for this device until it is switched off and on again.</td></tr>
+    <tr><td><b>This is normal</b></td><td>Adds a rule so this alert doesn't come back for this device around this time of day (the hour before and after included). For "on too long", it raises that device's limit instead.</td></tr>
+  </table>
+</section>
+
+<section id="install">
+  <h2>Install</h2>
+  <ol class="steps">
+    <li>In Home Assistant, open <b>Settings → Apps → App store</b>.</li>
+    <li>Open the menu (⋮) → <b>Repositories</b>, paste the repository address and click <b>Add</b>.</li>
+    <li>Find <b>Behavior Monitor</b> in the list and click <b>Install</b>.</li>
+    <li>Open the <b>Configuration</b> tab and set at least <code>notify_script</code> (see Setup below).</li>
+    <li>Click <b>Start</b>. It learns straight away; the first result is visible on its page after about a minute.</li>
+  </ol>
+</section>
+
+<section id="setup">
+  <h2>Setup</h2>
+
+  <h3>1. A notification script</h3>
+  <p>The app sends alerts through a script, so you can choose the phone (or phones) in one place. The script receives <code>title</code>, <code>message</code>, <code>tag</code> and <code>actions</code>. A simple example for the Home Assistant phone app:</p>
+<pre>alias: Notify me
+mode: parallel
+fields:
+  title: {}
+  message: {}
+  tag: {}
+  actions: {}
+sequence:
+  - action: notify.mobile_app_my_phone
+    data:
+      title: "{{ title }}"
+      message: "{{ message }}"
+      data:
+        tag: "{{ tag }}"
+        actions: "{{ actions | default([]) }}"</pre>
+  <p>Save it as <code>script.notify_me</code> (the default), or put your own script's name in <code>notify_script</code>.</p>
+
+  <h3>2. People (for "on while away")</h3>
+  <p>The app knows who is home from your <b>Person</b> entities. Make sure each person has their phone linked under <b>Settings → People</b> — ideally both the phone app and the Wi-Fi router tracker. A person whose state is unknown is ignored; leave out entries that aren't real people with <code>exclude_persons</code>.</p>
+  <div class="note warn"><strong>Important</strong>If nobody's phone is linked, the app can't tell home from away and won't send "on while away" alerts.</div>
+
+  <h3>3. More history with InfluxDB (optional)</h3>
+  <p>Without InfluxDB the app learns from Home Assistant's own history, which is usually only the last 10 days. If you use the InfluxDB integration, fill in <code>influx_url</code>, <code>influx_username</code> and <code>influx_password</code> and it will learn from <code>learn_days</code> (default 42 days) — the more history, the fewer false alerts.</p>
+  <div class="note tip"><strong>Tip</strong>The status page shows which history source is in use and how many days it found.</div>
+</section>
+
+<section id="page">
+  <h2>The status page</h2>
+  <p>Open <b>Behavior</b> in the sidebar. It shows:</p>
+  <div class="grid">
+    <div class="card"><h3><span class="icon">⚠️</span> Unusual right now</h3><p>Every device currently flagged, and why.</p></div>
+    <div class="card"><h3><span class="icon">🧪</span> 7-day test</h3><p>The alerts it <i>would</i> have sent over the last 7 days, using only what it knew before. Use it to judge whether the sensitivity suits you before you get alerts.</p></div>
+    <div class="card"><h3><span class="icon">📝</span> "This is normal" rules</h3><p>Every rule you created from a notification, with a <b>Remove</b> button.</p></div>
+    <div class="card"><h3><span class="icon">🗓️</span> Learned usage</h3><p>A 24-hour heatmap per device: the darker the square, the more often it's on at that hour.</p></div>
+  </div>
+  <h3>Reading the heatmap</h3>
+  <div class="card">
+    <div class="heat" aria-label="Example heatmap">
+      <div>Kitchen lights</div>
+      <div class="c" style="opacity:.05"></div><div class="c" style="opacity:.03"></div><div class="c" style="opacity:.02"></div><div class="c" style="opacity:.02"></div><div class="c" style="opacity:.02"></div><div class="c" style="opacity:.1"></div><div class="c" style="opacity:.4"></div><div class="c" style="opacity:.55"></div><div class="c" style="opacity:.3"></div><div class="c" style="opacity:.15"></div><div class="c" style="opacity:.1"></div><div class="c" style="opacity:.1"></div><div class="c" style="opacity:.2"></div><div class="c" style="opacity:.2"></div><div class="c" style="opacity:.1"></div><div class="c" style="opacity:.15"></div><div class="c" style="opacity:.35"></div><div class="c" style="opacity:.8"></div><div class="c" style="opacity:.95"></div><div class="c" style="opacity:.95"></div><div class="c" style="opacity:.9"></div><div class="c" style="opacity:.7"></div><div class="c" style="opacity:.35"></div><div class="c" style="opacity:.1"></div>
+      <div class="muted">hour →</div><div class="muted">0</div><div></div><div></div><div></div><div></div><div></div><div class="muted">6</div><div></div><div></div><div></div><div></div><div></div><div class="muted">12</div><div></div><div></div><div></div><div></div><div></div><div class="muted">18</div><div></div><div></div><div></div><div></div><div class="muted">23</div>
+    </div>
+    <p class="muted" style="margin:10px 0 0">Here the kitchen lights are mostly on in the evening, so seeing them on at 02:00 would be flagged.</p>
+  </div>
+  <h3>Sensor</h3>
+  <p><code>sensor.behavior_monitor</code> shows how many devices are unusual right now. Its attributes list them, and whether everyone is away — handy for dashboards and your own automations.</p>
+</section>
+
+<section id="settings">
+  <h2>Settings</h2>
+  <table>
+    <tr><th>Setting</th><th>Default</th><th>What it does</th></tr>
+    <tr><td><code>notify_script</code></td><td>script.notify_me</td><td>Script used to send alerts.</td></tr>
+    <tr><td><code>max_notifications_per_hour</code></td><td>4</td><td>Safety limit on alerts per hour.</td></tr>
+    <tr><td><code>check_interval_minutes</code></td><td>5</td><td>How often devices are checked.</td></tr>
+    <tr><td><code>learn_days</code></td><td>42</td><td>Days of history to learn from (InfluxDB only).</td></tr>
+    <tr><td><code>rare_threshold</code></td><td>0.05</td><td>"Unusual hour" if a device is on less than this share of the time at that hour. Lower = fewer alerts.</td></tr>
+    <tr><td><code>min_on_minutes</code></td><td>20</td><td>A device must be on at least this long before an "unusual hour" alert.</td></tr>
+    <tr><td><code>long_factor</code></td><td>1.5</td><td>"On too long" when a run is this many times longer than the usual longest run.</td></tr>
+    <tr><td><code>min_long_minutes</code></td><td>60</td><td>Never call a run "too long" below this many minutes.</td></tr>
+    <tr><td><code>away_threshold</code></td><td>0.1</td><td>"On while away" if the device is on less than this share of the time when nobody is home.</td></tr>
+    <tr><td><code>away_grace_minutes</code></td><td>20</td><td>Wait this long after everyone leaves before "on while away" alerts.</td></tr>
+    <tr><td><code>include_domains</code></td><td>light, switch, climate, media_player, cover</td><td>Kinds of device to watch.</td></tr>
+    <tr><td><code>include_entities</code></td><td>–</td><td>Extra devices to watch from other domains.</td></tr>
+    <tr><td><code>exclude_entities</code></td><td>–</td><td>Devices to ignore. Wildcards work, e.g. <code>switch.*_timer</code>.</td></tr>
+    <tr><td><code>exclude_persons</code></td><td>–</td><td>Person entities that aren't real people (e.g. a wall panel).</td></tr>
+    <tr><td><code>no_action_entities</code></td><td>–</td><td>Devices that should never get a "Turn off" button, e.g. a gate.</td></tr>
+    <tr><td><code>influx_url</code>, <code>influx_database</code>, <code>influx_username</code>, <code>influx_password</code></td><td>–</td><td>Optional InfluxDB (1.x) connection for longer history.</td></tr>
+  </table>
+  <div class="note tip"><strong>Too many alerts?</strong>Lower <code>rare_threshold</code> to 0.03 and raise <code>min_on_minutes</code> to 30, or simply tap <b>This is normal</b> on the ones you don't care about — it learns from that.</div>
+</section>
+
+<section id="faq" class="faq">
+  <h2>FAQ</h2>
+  <details><summary>How long before it's useful?</summary><p>It needs at least 5 days of history for a device before it alerts on it. With InfluxDB that's usually immediate; with Home Assistant's own history, expect about a week.</p></details>
+  <details><summary>Does it send anything outside my home?</summary><p>No. Everything runs on your Home Assistant. Alerts go only through your own notification script.</p></details>
+  <details><summary>Will it turn things off by itself?</summary><p>Never. It only turns something off when you tap <b>Turn off</b> on an alert.</p></details>
+  <details><summary>It flagged something that's normal for us.</summary><p>Tap <b>This is normal</b>. If you change your mind, remove the rule on the status page.</p></details>
+  <details><summary>Why did "on while away" not fire?</summary><p>Check that every person's phone is linked under Settings → People, and that the person entities show <i>home</i> / <i>away</i> correctly. Unknown people are ignored.</p></details>
+  <details><summary>When does it relearn?</summary><p>Every night after 03:00, and every time the app starts. You can also click <b>Learn again now</b> on the status page.</p></details>
+</section>
+
+</main>
+<footer>Behavior Monitor 1.0.0 · Home Assistant app</footer>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power Cost Tracker</title>
+  <style>
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --surface2:  #273449;
+      --border:    #334155;
+      --text:      #f1f5f9;
+      --muted:     #94a3b8;
+      --accent:    #3b82f6;
+      --accent-h:  #2563eb;
+      --green:     #10b981;
+      --yellow:    #f59e0b;
+      --red:       #ef4444;
+      --purple:    #8b5cf6;
+      --radius:    12px;
+      --shadow:    0 4px 20px rgba(0,0,0,.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 22px; }
+    header h1 { font-size: 16px; font-weight: 600; flex: 1; }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      flex-shrink: 0;
+    }
+    .dot.ok { background: var(--green); }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      padding: 0 24px;
+      gap: 4px;
+    }
+    .tab {
+      padding: 10px 18px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ── Pages ── */
+    .page { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-header h2 { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 20px; }
+
+    /* ── Stat grid ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; line-height: 1; }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .stat-card.accent  { border-color: var(--accent);  }
+    .stat-card.green   { border-color: var(--green);   }
+    .stat-card.yellow  { border-color: var(--yellow);  }
+    .stat-card.purple  { border-color: var(--purple);  }
+
+    /* ── Active device cards ── */
+    .active-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .device-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .device-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--green);
+    }
+    .device-card-name { font-weight: 600; margin-bottom: 4px; }
+    .device-card-eid { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-family: monospace; }
+    .device-card-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .device-card-row .label { color: var(--muted); font-size: 12px; }
+    .device-card-row .value { font-weight: 500; font-size: 13px; }
+    .state-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: rgba(16,185,129,.15);
+      color: var(--green);
+    }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    .active-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      margin-right: 6px;
+    }
+    .active-dot.on { background: var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none; cursor: pointer;
+      font-size: 13px; font-weight: 500;
+      transition: background .15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-danger  { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+    .btn-danger:hover { background: rgba(239,68,68,.3); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 460px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    input, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Error / empty states ── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+      z-index: 300;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform .3s, opacity .3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { border-color: var(--red); }
+    .toast.success { border-color: var(--green); }
+
+    /* ── Settings ── */
+    .config-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .config-row:last-child { border-bottom: none; }
+    .config-key { color: var(--muted); font-size: 12px; font-family: monospace; }
+    .config-val { font-weight: 500; font-family: monospace; font-size: 12px; }
+
+    .refresh-icon { animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">⚡</span>
+  <h1>Device Power Cost Tracker</h1>
+  <div class="status-pill">
+    <span class="dot" id="ha-dot"></span><span id="ha-label">HA</span>
+  </div>
+  <div class="status-pill" style="margin-left:12px">
+    <span class="dot" id="influx-dot"></span><span id="influx-label">InfluxDB</span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" data-tab="dashboard">Dashboard</button>
+  <button class="tab" data-tab="devices">Devices</button>
+  <button class="tab" data-tab="settings">Settings</button>
+</nav>
+
+<!-- ═══════════════════════ DASHBOARD ═══════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="stat-grid">
+    <div class="stat-card accent">
+      <div class="stat-label">Active Devices</div>
+      <div class="stat-value" id="stat-active">–</div>
+      <div class="stat-sub" id="stat-total-sub">of – configured</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Today's Cost</div>
+      <div class="stat-value" id="stat-today-cost">–</div>
+      <div class="stat-sub" id="stat-today-energy">–</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">Monthly Cost</div>
+      <div class="stat-value" id="stat-month-cost">–</div>
+      <div class="stat-sub" id="stat-month-energy">–</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Running Now</div>
+      <div class="stat-value" id="stat-running-cost">–</div>
+      <div class="stat-sub">estimated cost</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Active Devices</h2>
+      <span id="last-refresh" style="font-size:11px;color:var(--muted)"></span>
+    </div>
+    <div class="card-body">
+      <div class="active-grid" id="active-grid">
+        <div class="empty-state">
+          <div class="empty-icon">💤</div>
+          <div>No devices are currently running</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DEVICES ═══════════════════════ -->
+<div class="page" id="page-devices">
+  <div class="card">
+    <div class="card-header">
+      <h2>Configured Devices</h2>
+      <button class="btn btn-primary btn-sm" id="btn-add-device">+ Add Device</button>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-wrap">
+        <table id="devices-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Device</th>
+              <th>Entity ID</th>
+              <th>Power (W)</th>
+              <th>Price/kWh</th>
+              <th>Today Cost</th>
+              <th>Month Cost</th>
+              <th>Total kWh</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="devices-tbody">
+            <tr><td colspan="9" class="empty-state"><div class="empty-icon">📋</div><div>No devices configured yet</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SETTINGS ═══════════════════════ -->
+<div class="page" id="page-settings">
+
+  <div class="card">
+    <div class="card-header"><h2>Home Assistant Token</h2></div>
+    <div class="card-body">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
+        Generate a <b>Long-Lived Access Token</b> from your
+        <a href="/profile" target="_blank" style="color:var(--accent)">HA Profile page</a>
+        (scroll to bottom → Long-Lived Access Tokens → Create Token).
+      </p>
+      <div id="token-status-bar" style="padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;display:none"></div>
+      <div class="form-group">
+        <label>Access Token</label>
+        <input type="password" id="token-input" placeholder="Paste your long-lived access token here" />
+      </div>
+      <button class="btn btn-primary" id="token-save-btn">Save &amp; Connect</button>
+      <span id="token-msg" style="margin-left:12px;font-size:12px"></span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><h2>Add-on Configuration</h2></div>
+    <div class="card-body">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px">
+        These settings are read from the Home Assistant add-on configuration page.
+        To change them, go to <strong>Settings → Add-ons → Device Power Cost Tracker → Configuration</strong>.
+      </p>
+      <div id="config-table"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><h2>System Status</h2></div>
+    <div class="card-body" id="status-table"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ADD DEVICE MODAL ═══════════════════════ -->
+<div class="modal-backdrop" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add Device</h3>
+      <button class="modal-close" id="modal-close-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Entity</label>
+        <select id="form-entity">
+          <option value="">Loading entities…</option>
+        </select>
+        <div class="form-hint">Filter: <span id="domain-filters"></span></div>
+      </div>
+      <div class="form-group">
+        <label>Device Name</label>
+        <input type="text" id="form-name" placeholder="e.g. Living Room AC" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Power (Watts)</label>
+          <input type="number" id="form-power" placeholder="e.g. 1500" min="1" step="1" />
+        </div>
+        <div class="form-group">
+          <label>Price per kWh (AED)</label>
+          <input type="number" id="form-price" placeholder="0.62" step="0.01" min="0" />
+        </div>
+      </div>
+      <div id="form-error" style="color:var(--red);font-size:12px;margin-top:4px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save Device</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

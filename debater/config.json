@@ -1,0 +1,29 @@
+{
+  "name": "Debater",
+  "version": "0.2.0",
+  "slug": "debater",
+  "description": "General-purpose decision support deliberation",
+  "arch": [
+    "amd64",
+    "aarch64"
+  ],
+  "init": false,
+  "startup": "services",
+  "boot": "auto",
+  "ingress": true,
+  "ingress_port": 8080,
+  "panel_icon": "mdi:scale-balance",
+  "panel_title": "Debater",
+  "panel_admin": true,
+  "options": {
+    "gemini_api_key": "",
+    "gemini_model": "gemini-3.6-flash"
+  },
+  "schema": {
+    "gemini_api_key": "password",
+    "gemini_model": "str"
+  },
+  "homeassistant_api": false,
+  "hassio_api": false,
+  "auth_api": false
+}

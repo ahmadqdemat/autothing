@@ -1,0 +1,39 @@
+name: "Mentor"
+description: "AI-powered tutoring assistant that guides students without giving away direct solutions."
+version: "14.2.0"
+slug: "mentor"
+init: false
+arch:
+  - amd64
+  - aarch64
+ingress: true
+ingress_port: 8000
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: Web interface for non-admin users
+panel_icon: "mdi:school"
+panel_title: "Mentor"
+panel_admin: false
+schema:
+  gemini_api_key: "password"
+  model: "str"
+  leak_check_model: "str?"
+  thinking_level: "list(low|medium|high)?"
+  unlock_passphrase: "password?"
+  unlock_idle_timeout_minutes: "int"
+  max_unlock_attempts: "int"
+  lockout_minutes: "int"
+  leak_check_enabled: "bool"
+  student_age_or_grade: "str?"
+  log_conversations: "bool"
+options:
+  gemini_api_key: ""
+  model: "gemini-2.5-flash"
+  unlock_passphrase: ""
+  unlock_idle_timeout_minutes: 30
+  max_unlock_attempts: 5
+  lockout_minutes: 15
+  leak_check_enabled: true
+  student_age_or_grade: "Middle School / High School"
+  log_conversations: false

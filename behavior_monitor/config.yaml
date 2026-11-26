@@ -1,0 +1,67 @@
+name: "Behavior Monitor"
+description: "Learns how your devices are normally used and alerts you when something is unusual, with one-tap actions."
+version: "1.0.0"
+slug: "behavior_monitor"
+url: "https://github.com/ahmadqdemat/autothing/tree/main/behavior_monitor"
+init: false
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+homeassistant_api: true
+ingress: true
+ingress_port: 8099
+panel_icon: "mdi:home-search"
+panel_title: "Behavior"
+panel_admin: true
+options:
+  influx_url: ""
+  influx_database: "homeassistant"
+  influx_username: ""
+  influx_password: ""
+  learn_days: 42
+  check_interval_minutes: 5
+  notify_script: "script.notify_me"
+  max_notifications_per_hour: 4
+  rare_threshold: 0.05
+  away_threshold: 0.1
+  min_on_minutes: 20
+  long_factor: 1.5
+  min_long_minutes: 60
+  away_grace_minutes: 20
+  include_domains:
+    - light
+    - switch
+    - climate
+    - media_player
+    - cover
+  include_entities: []
+  exclude_entities: []
+  exclude_persons: []
+  no_action_entities: []
+schema:
+  influx_url: "str?"
+  influx_database: "str?"
+  influx_username: "str?"
+  influx_password: "password?"
+  learn_days: "int(3,365)"
+  check_interval_minutes: "int(1,60)"
+  notify_script: "str"
+  max_notifications_per_hour: "int(1,60)"
+  rare_threshold: "float(0,1)"
+  away_threshold: "float(0,1)"
+  min_on_minutes: "int(1,600)"
+  long_factor: "float(1,10)"
+  min_long_minutes: "int(5,1440)"
+  away_grace_minutes: "int(0,240)"
+  include_domains:
+    - "str"
+  include_entities:
+    - "str"
+  exclude_entities:
+    - "str"
+  exclude_persons:
+    - "str"
+  no_action_entities:
+    - "str"
