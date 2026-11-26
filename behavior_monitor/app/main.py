@@ -62,7 +62,7 @@ class Monitor:
         self.session: aiohttp.ClientSession | None = None
         self.profiles: dict[str, E.Profile] = {
             k: E.Profile.from_dict(v) for k, v in load_json("profiles.json", {}).items()}
-        self.rules: list = load_json("rules.json", [])
+        self.rules: list = dedupe_rules(load_json("rules.json", []))
         st = load_json("state.json", {})
         self.sent_keys: dict = st.get("sent_keys", {})
         self.batches: dict = st.get("batches", {})
@@ -354,11 +354,22 @@ class Monitor:
                         rule["hours"] = [(h - 1) % 24, h, (h + 1) % 24]
                     if reason == "too_long":
                         rule["min_minutes"] = (time.time() - b["sessions"][e]) / 60 * 1.5
-                    self.rules.append(rule)
+                    if not any(rule_key(r) == rule_key(rule) for r in self.rules):
+                        self.rules.append(rule)
                 self.ignored[e] = b["sessions"][e]
             save_json("rules.json", self.rules)
             log.info("Marked as normal: %s", b["entities"])
         self.save_state()
+        await self.clear_notification(bid)
+
+    async def clear_notification(self, bid):
+        """Remove the alert from the phone once a button was pressed."""
+        script = self.o.get("notify_script", "script.notify_ahmad").split(".", 1)[1]
+        try:
+            await self.ha("POST", f"/services/script/{script}",
+                          json={"message": "clear_notification", "tag": f"behavior_{bid}"})
+        except Exception as e:
+            log.warning("Could not clear notification: %s", e)
 
     async def listen_events(self):
         while True:
@@ -403,6 +414,20 @@ class Monitor:
                 except Exception:
                     log.exception("learning failed")
             await asyncio.sleep(interval)
+
+
+def rule_key(r):
+    return (r.get("entity_id"), r.get("reason"), tuple(r.get("hours") or []), round(r.get("min_minutes") or 0))
+
+
+def dedupe_rules(rules):
+    seen, out = set(), []
+    for r in rules:
+        k = rule_key(r)
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
 
 
 def dedupe(pts):

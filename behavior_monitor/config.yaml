@@ -1,6 +1,6 @@
 name: "Behavior Monitor"
 description: "Learns how your devices are normally used and alerts you when something is unusual, with one-tap actions."
-version: "1.0.0"
+version: "1.0.1"
 slug: "behavior_monitor"
 url: "https://github.com/ahmadqdemat/autothing/tree/main/behavior_monitor"
 init: false

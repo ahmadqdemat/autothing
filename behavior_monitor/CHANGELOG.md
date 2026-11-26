@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+- Pressing a notification button now removes the notification from the phone.
+- Pressing "This is normal" more than once no longer creates duplicate rules (existing duplicates are cleaned up).
+
+
 ## 1.0.0
 - First release.
 - Learns each device's usage by hour of day, separately for "someone home" and "everyone away".
