@@ -26,3 +26,6 @@ Each app's setup is also shown in its **Documentation** tab in Home Assistant.
 Each app is a folder with `config.yaml` (or `config.json`), `Dockerfile` and its code.
 Every change bumps `version` and adds an entry to the app's `CHANGELOG.md`
 (Home Assistant shows it in the update dialog).
+
+## Credits
+App icons use [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache License 2.0).
