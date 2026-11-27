@@ -1,6 +1,6 @@
 name: "Behavior Monitor"
 description: "Learns how your devices are normally used and alerts you when something is unusual, with one-tap actions."
-version: "1.0.1"
+version: "1.1.0"
 slug: "behavior_monitor"
 url: "https://github.com/ahmadqdemat/autothing/tree/main/behavior_monitor"
 init: false
@@ -22,7 +22,8 @@ options:
   influx_password: ""
   learn_days: 42
   check_interval_minutes: 5
-  notify_script: "script.notify_me"
+  phones: []
+  notify_script: ""
   max_notifications_per_hour: 4
   rare_threshold: 0.05
   away_threshold: 0.1
@@ -47,7 +48,9 @@ schema:
   influx_password: "password?"
   learn_days: "int(3,365)"
   check_interval_minutes: "int(1,60)"
-  notify_script: "str"
+  phones:
+    - "str"
+  notify_script: "str?"
   max_notifications_per_hour: "int(1,60)"
   rare_threshold: "float(0,1)"
   away_threshold: "float(0,1)"

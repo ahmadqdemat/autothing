@@ -298,14 +298,10 @@ class Monitor:
         if any(e not in no_action for e in ents):
             actions.append({"action": f"BM_OFF:{bid}", "title": "Turn off" if len(ents) == 1 else "Turn all off"})
         actions += [{"action": f"BM_IGN:{bid}", "title": "Ignore"}, {"action": f"BM_OK:{bid}", "title": "This is normal"}]
-        script = self.o.get("notify_script", "script.notify_ahmad").split(".", 1)[1]
-        try:
-            await self.ha("POST", f"/services/script/{script}", json={
-                "title": title, "message": "\n".join(lines), "tag": f"behavior_{bid}", "actions": actions})
+        sent = await self.send(title, "\n".join(lines), f"behavior_{bid}", actions)
+        if sent:
             self.notify_times.append(now)
-            log.info("Notified: %s | %s", title, " / ".join(lines))
-        except Exception as e:
-            log.error("Notification failed: %s", e)
+            log.info("Notified %s: %s | %s", ", ".join(sent), title, " / ".join(lines))
 
     async def publish(self, away_since):
         try:
@@ -325,6 +321,9 @@ class Monitor:
     # ---------- notification buttons ----------
     async def handle_action(self, action: str):
         kind, _, bid = action.partition(":")
+        if kind == "BM_TEST":
+            await self.send(None, "clear_notification", "behavior_test", None)
+            return
         b = self.batches.get(bid)
         if not b:
             log.info("Unknown or expired alert %s", bid)
@@ -363,13 +362,81 @@ class Monitor:
         await self.clear_notification(bid)
 
     async def clear_notification(self, bid):
-        """Remove the alert from the phone once a button was pressed."""
-        script = self.o.get("notify_script", "script.notify_ahmad").split(".", 1)[1]
+        """Remove the alert from the phone(s) once a button was pressed."""
+        await self.send(None, "clear_notification", f"behavior_{bid}", None)
+
+    # ---------- sending to phones ----------
+    async def phone_targets(self) -> list[str]:
+        """Notify services (without 'notify.') for the configured phones.
+
+        Each entry in `phones` may be a phone's name in the Home Assistant app
+        ("S24 Ultra"), a notify service ("notify.mobile_app_s24_ultra") or its short
+        form. Names are resolved on every send, so a phone that re-registers under a
+        new service name keeps working. An empty list means every phone with the app.
+        """
+        services = await self.ha("GET", "/services")
+        notify = next((d["services"] for d in services if d["domain"] == "notify"), {})
+        mobile = sorted(k for k in notify if k.startswith("mobile_app_"))
+        wanted = [str(p).strip() for p in (self.o.get("phones") or []) if str(p).strip()]
+        if not wanted:
+            return mobile
+        out = []
+        for w in wanted:
+            short = w.split(".", 1)[1] if w.startswith("notify.") else w
+            slug = slugify(short)
+            for cand in (short, slug, "mobile_app_" + slug):
+                if cand in notify:
+                    out.append(cand)
+                    break
+            else:
+                # fall back to a phone whose service name contains the slug (e.g. "_2" suffix)
+                match = [m for m in mobile if slug and slug in m]
+                if match:
+                    out.append(match[0])
+                else:
+                    log.warning("Phone '%s' not found among: %s", w, ", ".join(mobile) or "no phones")
+        return list(dict.fromkeys(out))
+
+    async def send(self, title, message, tag, actions) -> list[str]:
+        """Send to the configured phones, or through notify_script if one is set."""
+        script = (self.o.get("notify_script") or "").strip()
+        if script:
+            payload = {"message": message, "tag": tag}
+            if title:
+                payload["title"] = title
+            if actions:
+                payload["actions"] = actions
+            try:
+                await self.ha("POST", f"/services/script/{script.split('.', 1)[-1]}", json=payload)
+                return [script]
+            except Exception as e:
+                log.error("Notification script %s failed: %s", script, e)
+                return []
+        data = {"tag": tag, "group": "behavior_monitor"}
+        if actions:
+            data["actions"] = actions
+        payload = {"message": message, "data": data}
+        if title:
+            payload["title"] = title
+        sent = []
         try:
-            await self.ha("POST", f"/services/script/{script}",
-                          json={"message": "clear_notification", "tag": f"behavior_{bid}"})
+            targets = await self.phone_targets()
         except Exception as e:
-            log.warning("Could not clear notification: %s", e)
+            log.error("Could not list phones: %s", e)
+            return []
+        if not targets:
+            log.error("No phone to notify: install the Home Assistant app on a phone, or set 'phones'")
+        for t in targets:
+            try:
+                await self.ha("POST", f"/services/notify/{t}", json=payload)
+                sent.append(t)
+            except Exception as e:
+                log.error("Notification to %s failed: %s", t, e)
+        return sent
+
+    async def test_notification(self):
+        return await self.send("🔍 Behavior Monitor test", "Notifications work. Alerts will arrive like this one.",
+                               "behavior_test", [{"action": "BM_TEST:x", "title": "OK"}])
 
     async def listen_events(self):
         while True:
@@ -414,6 +481,16 @@ class Monitor:
                 except Exception:
                     log.exception("learning failed")
             await asyncio.sleep(interval)
+
+
+def slugify(text: str) -> str:
+    """Home Assistant style slug: 'Ahmad’s iPad' -> 'ahmads_ipad', 'S24 Ultra' -> 's24_ultra'."""
+    import re
+    import unicodedata
+    t = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
+    t = re.sub(r"['’`]", "", t)
+    t = re.sub(r"[^a-z0-9]+", "_", t)
+    return t.strip("_")
 
 
 def rule_key(r):
@@ -472,7 +549,9 @@ button{{background:#03a9f4;color:#fff;border:0;padding:4px 10px;border-radius:4p
 <h1>Behavior Monitor</h1>
 <p class=muted>Learned {li.get('entities', 0)} devices ({li.get('ready', 0)} with enough history) at {esc(str(li.get('at', '-')))}
 from {esc(str(li.get('source', '-')))}, {li.get('days_of_data', 0)} days of data. People: {esc(', '.join(li.get('persons', [])))}.</p>
-<form method=post action='relearn'><button>Learn again now</button></form>
+<form method=post action='relearn' style='display:inline'><button>Learn again now</button></form>
+<form method=post action='test' style='display:inline;margin-left:8px'><button>Send test notification</button></form>
+<p class=muted>Alerts go to: {esc(m.o.get('notify_script') or ', '.join(m.o.get('phones') or []) or 'every phone with the Home Assistant app')}</p>
 <h2>Unusual right now</h2><table><tr><th>Device</th><th>Why</th><th>Detail</th></tr>{rows_now}</table>
 <h2>Test: alerts it would have sent in the last {bt.get('days', 0)} days ({bt.get('total', 0)})</h2>
 <p class=muted>{esc(json.dumps(bt.get('by_reason', {})))} {esc(bt.get('note', ''))}</p>
@@ -508,6 +587,13 @@ async def web_app(m: Monitor):
     app.router.add_get("/api/status", status)
     app.router.add_post("/relearn", relearn)
     app.router.add_post("/rules/delete", rule_delete)
+
+    async def test(_):
+        sent = await m.test_notification()
+        log.info("Test notification sent to: %s", ", ".join(sent) or "nobody")
+        raise web.HTTPSeeOther("./")
+
+    app.router.add_post("/test", test)
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, "0.0.0.0", 8099).start()

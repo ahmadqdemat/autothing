@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+- Notifications are built in: alerts go straight to your phones, no script needed.
+- New `phones` setting: list phones by their name in the Home Assistant app (e.g. `S24 Ultra`); empty = every phone with the app. Names are looked up on every alert, so a phone that re-registers keeps working.
+- `notify_script` is now optional (use it only if you want your own script).
+- "Send test notification" button on the status page.
+
 ## 1.0.1
 - Pressing a notification button now removes the notification from the phone.
 - Pressing "This is normal" more than once no longer creates duplicate rules (existing duplicates are cleaned up).

@@ -133,32 +133,22 @@
     <li>In Home Assistant, open <b>Settings → Apps → App store</b>.</li>
     <li>Open the menu (⋮) → <b>Repositories</b>, paste the repository address and click <b>Add</b>.</li>
     <li>Find <b>Behavior Monitor</b> in the list and click <b>Install</b>.</li>
-    <li>Open the <b>Configuration</b> tab and set at least <code>notify_script</code> (see Setup below).</li>
-    <li>Click <b>Start</b>. It learns straight away; the first result is visible on its page after about a minute.</li>
+    <li>Open the <b>Configuration</b> tab and add your phone under <code>phones</code> (see Setup below).</li>
+    <li>Click <b>Start</b>, open <b>Behavior</b> in the sidebar and press <b>Send test notification</b>. It learns straight away; the first results show on its page after about a minute.</li>
   </ol>
 </section>
 
 <section id="setup">
   <h2>Setup</h2>
 
-  <h3>1. A notification script</h3>
-  <p>The app sends alerts through a script, so you can choose the phone (or phones) in one place. The script receives <code>title</code>, <code>message</code>, <code>tag</code> and <code>actions</code>. A simple example for the Home Assistant phone app:</p>
-<pre>alias: Notify me
-mode: parallel
-fields:
-  title: {}
-  message: {}
-  tag: {}
-  actions: {}
-sequence:
-  - action: notify.mobile_app_my_phone
-    data:
-      title: "{{ title }}"
-      message: "{{ message }}"
-      data:
-        tag: "{{ tag }}"
-        actions: "{{ actions | default([]) }}"</pre>
-  <p>Save it as <code>script.notify_me</code> (the default), or put your own script's name in <code>notify_script</code>.</p>
+  <h3>1. Choose the phones</h3>
+  <p>Alerts go straight to your phones through the Home Assistant app — nothing else to set up. In the app's <b>Configuration</b> tab, list the phones under <code>phones</code>, using each phone's name as shown in the Home Assistant app (<b>Settings → Companion app</b>):</p>
+<pre>phones:
+  - S24 Ultra
+  - Abeer's iPhone</pre>
+  <p>Leave <code>phones</code> empty to alert every phone that has the Home Assistant app. Then open the app's page and press <b>Send test notification</b>.</p>
+  <div class="note ok"><strong>Survives phone changes</strong>Phones are looked up by name on every alert, so a phone that re-registers with Home Assistant keeps getting alerts.</div>
+  <div class="note tip"><strong>Advanced</strong>To route alerts through your own script instead (for example to add a sound or send to a watch), set <code>notify_script</code>. It receives <code>title</code>, <code>message</code>, <code>tag</code> and <code>actions</code>.</div>
 
   <h3>2. People (for "on while away")</h3>
   <p>The app knows who is home from your <b>Person</b> entities. Make sure each person has their phone linked under <b>Settings → People</b> — ideally both the phone app and the Wi-Fi router tracker. A person whose state is unknown is ignored; leave out entries that aren't real people with <code>exclude_persons</code>.</p>
@@ -195,7 +185,8 @@ sequence:
   <h2>Settings</h2>
   <table>
     <tr><th>Setting</th><th>Default</th><th>What it does</th></tr>
-    <tr><td><code>notify_script</code></td><td>script.notify_me</td><td>Script used to send alerts.</td></tr>
+    <tr><td><code>phones</code></td><td>– (all phones)</td><td>Phones that get alerts, by their name in the Home Assistant app.</td></tr>
+    <tr><td><code>notify_script</code></td><td>–</td><td>Optional: send through your own script instead of straight to the phones.</td></tr>
     <tr><td><code>max_notifications_per_hour</code></td><td>4</td><td>Safety limit on alerts per hour.</td></tr>
     <tr><td><code>check_interval_minutes</code></td><td>5</td><td>How often devices are checked.</td></tr>
     <tr><td><code>learn_days</code></td><td>42</td><td>Days of history to learn from (InfluxDB only).</td></tr>
@@ -218,7 +209,7 @@ sequence:
 <section id="faq" class="faq">
   <h2>FAQ</h2>
   <details><summary>How long before it's useful?</summary><p>It needs at least 5 days of history for a device before it alerts on it. With InfluxDB that's usually immediate; with Home Assistant's own history, expect about a week.</p></details>
-  <details><summary>Does it send anything outside my home?</summary><p>No. Everything runs on your Home Assistant. Alerts go only through your own notification script.</p></details>
+  <details><summary>Does it send anything outside my home?</summary><p>No. Everything runs on your Home Assistant. Alerts go only to your own phones through the Home Assistant app.</p></details>
   <details><summary>Will it turn things off by itself?</summary><p>Never. It only turns something off when you tap <b>Turn off</b> on an alert.</p></details>
   <details><summary>It flagged something that's normal for us.</summary><p>Tap <b>This is normal</b>. If you change your mind, remove the rule on the status page.</p></details>
   <details><summary>Why did "on while away" not fire?</summary><p>Check that every person's phone is linked under Settings → People, and that the person entities show <i>home</i> / <i>away</i> correctly. Unknown people are ignored.</p></details>
@@ -226,6 +217,6 @@ sequence:
 </section>
 
 </main>
-<footer>Behavior Monitor 1.0.0 · Home Assistant app</footer>
+<footer>Behavior Monitor 1.1.0 · Home Assistant app</footer>
 </body>
 </html>

@@ -15,6 +15,15 @@ Full user guide: docs/index.html in the repository.
 Each alert has buttons: **Turn off**, **Ignore** (this time only) and **This is normal**
 (stops that alert for that device at that time of day). Rules can be removed on the add-on page.
 
+## Notifications
+Alerts go straight to your phones through the Home Assistant app — no script needed.
+Set `phones` to the phones that should get alerts, using each phone's name as shown in the
+Home Assistant app (Settings → Companion app), e.g. `S24 Ultra`. Leave it empty to alert every
+phone with the app. Use the **Send test notification** button on the app's page to check.
+
+Advanced: set `notify_script` to send through your own script instead (it receives `title`,
+`message`, `tag` and `actions`).
+
 ## History
 With `influx_password` set, it learns from InfluxDB (`learn_days`, default 42 days).
 Without it, it uses Home Assistant's own history (about 10 days). It relearns every night after 03:00.
